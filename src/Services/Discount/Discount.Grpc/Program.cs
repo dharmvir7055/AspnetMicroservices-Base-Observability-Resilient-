@@ -1,3 +1,4 @@
+using Common.Logging;
 using Discount.Grpc.Extensions;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Hosting;
