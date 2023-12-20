@@ -5,10 +5,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+using Microsoft.OpenApi.Models;
 
 namespace Discount.Grpc
 {
@@ -20,7 +17,14 @@ namespace Discount.Grpc
         {
             services.AddScoped<IDiscountRepository, DiscountRepository>();
             services.AddAutoMapper(typeof(Startup));
-            services.AddGrpc();
+            services.AddGrpc().AddJsonTranscoding();
+            services.AddGrpcSwagger();
+            services.AddSwaggerGen(c =>
+            {
+                c.SwaggerDoc("v1",
+                    new OpenApiInfo { Title = "Discount Grpc", Version = "v1" });
+            });
+
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -33,6 +37,12 @@ namespace Discount.Grpc
 
             app.UseRouting();
 
+            app.UseSwagger();
+            app.UseSwaggerUI(c =>
+            {
+                c.SwaggerEndpoint("/swagger/v1/swagger.json", "Discount Grpc V1");
+            });
+            // Con
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapGrpcService<DiscountService>();

@@ -30,7 +30,7 @@ services:
   orderdb:
     container_name: orderdb
     environment:
-        SA_PASSWORD: "SwN12345678"
+        MSSQL_SA_PASSWORD: "SwN12345678"
         ACCEPT_EULA: "Y"
     restart: always
     ports:
@@ -73,7 +73,7 @@ services:
     depends_on:
       - catalogdb
     ports:
-      - "8000:80"
+      - "8000:8080"
 
   basket.api:
     container_name: basket.api
@@ -86,7 +86,7 @@ services:
       - basketdb
       - rabbitmq
     ports:
-      - "8001:80"
+      - "8001:8080"
 
   discount.api:
     container_name: discount.api
@@ -96,7 +96,7 @@ services:
     depends_on:
       - discountdb
     ports:
-      - "8002:80"
+      - "8002:8080"
 
   discount.grpc:
     container_name: discount.grpc
@@ -106,19 +106,19 @@ services:
     depends_on:
       - discountdb
     ports:
-      - "8003:80"
+      - "8003:8080"
 
   ordering.api:
     container_name: ordering.api
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
-      - "ConnectionStrings:OrderingConnectionString=Server=orderdb;Database=OrderDb;User Id=sa;Password=SwN12345678"  
-      - "EventBusSettings:HostAddress=amqp://guest:guest@rabbitmq:5672"
+      - "ConnectionStrings__OrderingConnectionString=Server=orderdb;TrustServerCertificate=true;Database=OrderDb;User Id=sa;Password=SwN12345678"  
+      - "EventBusSettings__HostAddress=amqp://guest:guest@rabbitmq:5672"
     depends_on:
         - orderdb
         - rabbitmq
     ports:
-        - "8004:80"
+        - "8004:8080"
 
   ocelotapigw:
     container_name: ocelotapigw
@@ -130,7 +130,7 @@ services:
         - discount.api
         - ordering.api
     ports:
-      - "8010:80"
+      - "8010:8080"
 
   shopping.aggregator:
     container_name: shopping.aggregator
@@ -144,7 +144,7 @@ services:
       - basket.api
       - ordering.api
     ports:
-      - "8005:80"
+      - "8005:8080"
 
   aspnetrunbasics:
     container_name: aspnetrunbasics
@@ -158,4 +158,28 @@ services:
       - discount.api
       - ordering.api
     ports:
-      - "8006:80"
+      - "8006:8080"
+
+  elasticsearch:
+    container_name: elasticsearch
+    environment:
+        - xpack.monitoring.enabled=true
+        - xpack.watcher.enabled=false
+        - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+        - discovery.type=single-node
+    ports:
+        - "9200:9200"
+    volumes:
+        - elasticsearch-data:/usr/share/elasticsearch/data   
+
+
+  kibana:
+    container_name: kibana
+    environment:        
+        - ELASTICSEARCH_URL=http://elasticsearch:9200
+    depends_on:
+        - elasticsearch
+    ports:
+        - "5601:5601" 
+    
+
